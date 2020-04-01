@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import pdb
 
 def get_stat_num(fight_stat, stat_type):
     # function to get number of strikes/takedowns landed or attempted
@@ -76,7 +77,7 @@ def get_weight_class(s):
     
     s_split = s.split()
     
-    sub_lst = ['weight', 'Catch', 'Open']
+    sub_lst = ['weight', 'Catch', 'Open', "Women's", 'Light']
     
     weight_class = list(filter(lambda s: any(sub_str in s for sub_str in sub_lst), s_split))
     
@@ -85,6 +86,16 @@ def get_weight_class(s):
     else:
         if weight_class[0] in ['Catch', 'Open']:
             weight_class = weight_class[0] + 'weight'
+        elif "Women's" in weight_class:
+            if weight_class[0] == "Women's":
+                weight_class = weight_class[0] + ' ' + weight_class[1]
+            else:
+                weight_class = weight_class[1] + ' ' + weight_class[0]
+        elif 'Light' in weight_class:
+            if weight_class[0] == 'Light':
+                weight_class = weight_class[0] + ' ' + weight_class[1]
+            else:
+                weight_class = weight_class[1] + ' ' + weight_class[0]
         else:
             weight_class = weight_class[0]
     
