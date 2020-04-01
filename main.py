@@ -32,17 +32,6 @@ replace_acc_stat(df_fights, acc_cols)
 replace_pct_stat(df_fights, pct_cols)
 df_fights['weight_class'] = df_fights['Fight_type'].apply(get_weight_class)
 
-
-# TODO: re-label the columns in the plot so they are easier to read
-# TODO: be able to plot heatmap for strikes landed or attempted only
+# calculate average for each accuracy column
 df_avg = calc_avg_per_class(df_fights, acc_cols)
 df_avg = df_avg.reindex(weight_class_sort)
-df_avg = df_avg.drop(['Catchweight', 'Openweight', 'NA'])
-
-sns.set(rc={'figure.figsize':(18,14)})
-
-sns_plot = sns.heatmap(data=df_avg, annot=True, fmt='g')
-plt.yticks(rotation=0)
-
-fig = sns_plot.get_figure()
-fig.savefig('strikes-per-wc.pdf')

@@ -29,8 +29,8 @@ def calc_avg_per_class(df, cols):
         
         # we want the sum of red and blue corner to get the total over the weight
         # class
-        total_l = 'TOTAL_' + stat_col + '_L'
-        total_a = 'TOTAL_' + stat_col + '_A'
+        total_l = stat_col + '_L'
+        total_a = stat_col + '_A'
         df_stat[total_l] = df_stat[red_l] + df_stat[blue_l]
         df_stat[total_a] = df_stat[red_a] + df_stat[blue_a]
         

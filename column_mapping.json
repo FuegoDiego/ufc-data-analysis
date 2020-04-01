@@ -1,0 +1,15 @@
+{
+    "L": "Landed",
+    "A": "Attempted",
+    "DISTANCE": "Distance",
+    "TOTAL": "Total",
+    "STR.": "Strikes",
+    "STR": "Strikes",
+    "SIG": "Significant",
+    "LEG": "Leg",
+    "GROUND": "Ground",
+    "BODY": "Body",
+    "CLINCH": "Clinch",
+    "HEAD": "Head",
+    "TD": "Takedown"
+}
