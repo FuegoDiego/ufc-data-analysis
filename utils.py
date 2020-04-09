@@ -35,3 +35,25 @@ def rename_cols(df, cols):
     df = df.rename(columns=rename_dict)
     
     return df
+
+def name_corner(cols):
+    # function to assign red and blue corner prefix to a column name
+    #
+    # cols: numpy.array(str), column names
+    
+    red_corner = 'R_' + cols
+    blue_corner = 'B_' + cols
+    
+    return red_corner, blue_corner
+
+def name_lnd_att(cols):
+    # function to assign landed and attempted prefix to a column name
+    #
+    # cols: numpy.array(str), column names
+    
+    landed = col + '_L'
+    attempted = col + '_A'
+    
+    return landed, attempted
+    
+

@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import pdb
 
+from utils import *
+
 def calc_avg_per_class(df, cols):
     # function to calculate the average statistic per weight class, e.g.
     # average significant strikes landed and attempted per weight class
@@ -12,12 +14,12 @@ def calc_avg_per_class(df, cols):
     # append the average metrics to it
     df_avg = pd.DataFrame(index=set(df['weight_class']))
     
+    # TODO: vectorize
     for stat_col in cols:
         # columns for landed and attempted
-        red_l = 'R_' + stat_col + '_L'
-        red_a = 'R_' + stat_col + '_A'
-        blue_l = 'B_' + stat_col + '_L'
-        blue_a = 'B_' + stat_col + '_A'
+        red, blue = name_corner(stat_col)
+        red_l, red_a = name_lnd_att(red)
+        blue_l, blue_a = name_lnd_att(blue)
         
         # columns to retrieve
         cols = ['weight_class', red_l, red_a, blue_l, blue_a]
@@ -29,8 +31,7 @@ def calc_avg_per_class(df, cols):
         
         # we want the sum of red and blue corner to get the total over the weight
         # class
-        total_l = stat_col + '_L'
-        total_a = stat_col + '_A'
+        total_l, total_a = name_lnd_att(stat_col)
         df_stat[total_l] = df_stat[red_l] + df_stat[blue_l]
         df_stat[total_a] = df_stat[red_a] + df_stat[blue_a]
         

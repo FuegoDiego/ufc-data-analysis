@@ -7,8 +7,8 @@ import pdb
 
 from utils import *
 
-# TODO: re-label the columns in the plot so they are easier to read
-# TODO: be able to plot heatmap for strikes landed or attempted only
+# TODO: order columns from highest to lowest concentration (i.e. lighter colours
+#  at the front of the plot)
 
 def plot_heat_strikes(df, stk_type, width=11.69, height=8.24, fmt='.png',
                       rows_exc=['Catchweight', 'Openweight', 'NA']):
