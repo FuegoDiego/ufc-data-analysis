@@ -3,6 +3,36 @@ import numpy as np
 import json
 import pdb
 
+def get_corner_cols(df):
+    # function to get the columns corresponding to each corner
+    #
+    # df: DataFrame, contains fight data
+    
+    red_corner = list(filter(lambda s: 'R_' in s, df.columns))
+    blue_corner = list(filter(lambda s: 'B_' in s, df.columns))
+    
+    return red_corner, blue_corner
+
+def name_corner(cols):
+    # function to assign red and blue corner prefix to a column name
+    #
+    # cols: list(str), column names
+    
+    red_corner = list(map(lambda s: 'R_' + s, cols))
+    blue_corner = list(map(lambda s: 'B_' + s, cols))
+    
+    return red_corner, blue_corner
+
+def name_lnd_att(cols):
+    # function to assign landed and attempted prefix to a column name
+    #
+    # cols: list(str), column names
+    
+    landed = list(map(lambda s: s + '_L', cols))
+    attempted = list(map(lambda s: s + '_A', cols))
+    
+    return landed, attempted
+
 def read_col_map(path='./column_mapping.json'):
     # function to read in the column mapping JSON file as a dictionary
     #
@@ -35,25 +65,3 @@ def rename_cols(df, cols):
     df = df.rename(columns=rename_dict)
     
     return df
-
-def name_corner(cols):
-    # function to assign red and blue corner prefix to a column name
-    #
-    # cols: list(str), column names
-    
-    red_corner = list(map(lambda s: 'R_' + s, cols))
-    blue_corner = list(map(lambda s: 'B_' + s, cols))
-    
-    return red_corner, blue_corner
-
-def name_lnd_att(cols):
-    # function to assign landed and attempted prefix to a column name
-    #
-    # cols: list(str), column names
-    
-    landed = list(map(lambda s: s + '_L', cols))
-    attempted = list(map(lambda s: s + '_A', cols))
-    
-    return landed, attempted
-    
-
