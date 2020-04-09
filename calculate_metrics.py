@@ -10,35 +10,22 @@ def calc_avg_per_class(df, cols):
     #
     # stat_col: column type to calculate average over, e.g. 'SIG_STR.'
     
-    # initialize a DataFrame with just the unique weight classes so we can
-    # append the average metrics to it
-    df_avg = pd.DataFrame(index=set(df['weight_class']))
+    df = df.set_index('weight_class')
+
+    # columns for landed and attempted
+    red, blue = name_corner(cols)
+    total_l, total_a = name_lnd_att(cols)
+    red_l, red_a = name_lnd_att(red)
+    blue_l, blue_a = name_lnd_att(blue)
     
-    # TODO: vectorize
-    for stat_col in cols:
-        # columns for landed and attempted
-        red, blue = name_corner(stat_col)
-        red_l, red_a = name_lnd_att(red)
-        blue_l, blue_a = name_lnd_att(blue)
-        
-        # columns to retrieve
-        cols = ['weight_class', red_l, red_a, blue_l, blue_a]
-        
-        # copy dataframe to include only weight class, and the desired columns
-        # it's a small table so we can copy it, otherwise we'd have to find a
-        # better way to do the calculations in bulk
-        df_stat = df[cols].copy()
-        
-        # we want the sum of red and blue corner to get the total over the weight
-        # class
-        total_l, total_a = name_lnd_att(stat_col)
-        df_stat[total_l] = df_stat[red_l] + df_stat[blue_l]
-        df_stat[total_a] = df_stat[red_a] + df_stat[blue_a]
-        
-        df_agg = df_stat.groupby('weight_class')[total_l, total_a].mean().round(2)
-        
-        df_avg = df_agg.join(df_avg)
-        
-        #pdb.set_trace()
+    # columns to retrieve, and do calculations on
+    cols_red = red_l + red_a
+    cols_blue = blue_l + blue_a
+    cols_total = total_l + total_a
     
-    return df_avg
+    df_stat = pd.DataFrame(df[cols_red].values + df[cols_blue].values, index=df.index,
+                      columns=cols_total)
+    
+    df_agg = df_stat.groupby('weight_class').mean().round(2)
+    
+    return df_agg
