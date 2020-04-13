@@ -10,8 +10,9 @@ from utils import *
 # TODO: order columns from highest to lowest concentration (i.e. lighter colours
 #  at the front of the plot)
 
-def plot_heat_strikes(df, stk_type, width=11.69, height=8.24, fmt='.png',
-                      rows_exc=['Catchweight', 'Openweight', 'NA']):
+def plot_heat_strikes(df, stk_type, width=19.20, height=10.8, fmt='.png',
+                      rows_exc=['Catchweight', 'Openweight', 'NA'],
+                      switch_ax=False):
     # function to plot heatmap of strikes per weight class, for landed or
     # attempted strikes
     #
@@ -21,6 +22,7 @@ def plot_heat_strikes(df, stk_type, width=11.69, height=8.24, fmt='.png',
     # height: int, height of the plot in inches (default is A4)
     # fmt: str, file format (defaults to PNG)
     # rows_exc: lst of str, weight classes to exclude from the plot
+    # switch_ax: Boolean, True if you want to switch the x and y axes on the plot
     
     # define flag to filter columns by landed or attempted strikes
     if stk_type.upper() == 'LANDED':
@@ -49,7 +51,13 @@ def plot_heat_strikes(df, stk_type, width=11.69, height=8.24, fmt='.png',
         
     df_heat = rename_cols(df_heat, list(df_heat.columns))
     
+    df_heat = df_heat.loc[:, df_heat.max().sort_values(ascending=False).index]
+    
+    if switch_ax:
+        df_heat = df_heat.transpose()
+    
     sns.set(rc={'figure.figsize':(width,height)})
+    sns.set(font_scale=1.5)
     
     sns_plot = sns.heatmap(data=df_heat, annot=True, fmt='g')
     plt.title(plt_title)
@@ -57,7 +65,7 @@ def plot_heat_strikes(df, stk_type, width=11.69, height=8.24, fmt='.png',
     
     # tighten the plot so it fits better
     plt.tight_layout()
-    plt.axes().axes.get_yaxis().get_label().set_visible(False)
+    plt.axes().get_yaxis().get_label().set_visible(False)
     
     fig = sns_plot.get_figure()
     fig.savefig(fname)

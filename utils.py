@@ -49,6 +49,7 @@ def rename_cols(df, cols):
     # df: DataFrame with columns cols to be renamed
     # cols: list of columns to be renamed
     
+    # read in the column mapping to get the new column names
     col_dict = read_col_map()
     
     def map_col(col):

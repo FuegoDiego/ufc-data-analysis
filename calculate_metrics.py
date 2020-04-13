@@ -74,3 +74,25 @@ def calc_fight_sums(df, cols):
                       columns=cols_total)
     
     return df_stat
+
+def get_n_fights(df):
+    # function to get a DataFrame containing the number of fights per fighter
+    #
+    # df: DataFrame, contains fight data
+    
+    fighter_counts = df[['R_fighter', 'B_fighter']]
+
+    red_counts = fighter_counts.groupby('R_fighter').size().reset_index(name='R_counts')
+    blue_counts = fighter_counts.groupby('B_fighter').size().reset_index(name='B_counts')
+    
+    red_counts = red_counts.set_index('R_fighter')
+    red_counts.index.names = ['fighter']
+    
+    blue_counts = blue_counts.set_index('B_fighter')
+    blue_counts.index.names = ['fighter']
+
+    fighter_counts = red_counts.merge(blue_counts, on='fighter')
+
+    fighter_counts['num_fights'] = fighter_counts['R_counts'] + fighter_counts['B_counts']
+    
+    return fighter_counts

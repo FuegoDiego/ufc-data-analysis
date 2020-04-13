@@ -33,5 +33,11 @@ replace_pct_stat(df_fights, pct_cols)
 df_fights['weight_class'] = df_fights['Fight_type'].apply(get_weight_class)
 
 # calculate average for each accuracy column
-df_avg = calc_avg_per_class(df_fights, acc_cols)
-df_avg = df_avg.reindex(weight_class_sort)
+avg_wc = calc_avg_per_class(df_fights, acc_cols)
+avg_wc = avg_wc.reindex(weight_class_sort)
+
+# get the average of all statistics for every fighter, throughout their career
+fighters_avg = calc_agg(df_fights, acc_cols)
+
+# get the total number of fights, per fighter
+fight_count = get_n_fights(df_fights)
