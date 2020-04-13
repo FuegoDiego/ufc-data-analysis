@@ -1,15 +1,36 @@
 {
-    "L": "Landed",
-    "A": "Attempted",
-    "DISTANCE": "Distance",
-    "TOTAL": "Total",
-    "STR.": "Strikes",
-    "STR": "Strikes",
-    "SIG": "Significant",
-    "LEG": "Leg",
-    "GROUND": "Ground",
-    "BODY": "Body",
-    "CLINCH": "Clinch",
-    "HEAD": "Head",
-    "TD": "Takedown"
+"strike":
+    {
+        "L": "Landed",
+        "A": "Attempted",
+        "DISTANCE": "Distance",
+        "TOTAL": "Total",
+        "STR.": "Strikes",
+        "STR": "Strikes",
+        "SIG": "Significant",
+        "LEG": "Leg",
+        "GROUND": "Ground",
+        "BODY": "Body",
+        "CLINCH": "Clinch",
+        "HEAD": "Head",
+        "TD": "Takedown"
+    },
+"weight class":
+    {
+        "Women's Strawweight": "WSW",
+        "Women's Flyweight": "WFlW",
+        "Women's Bantamweight": "WBW",
+        "Women's Featherweight": "WFW",
+        "Flyweight": "FlW",
+        "Bantamweight": "BW",
+        "Featherweight": "FW",
+        "Lightweight": "LW",
+        "Welterweight": "WW",
+        "Middleweight": "MW",
+        "Light Heavyweight": "LHW",
+        "Heavyweight": "HW",
+        "Catchweight": "CW",
+        "Openweight": "OW",
+        "NA": "NA"
+    }
 }

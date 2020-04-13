@@ -49,7 +49,7 @@ def plot_heat_strikes(df, stk_type, width=19.20, height=10.8, fmt='.png',
         else:
             continue
         
-    df_heat = rename_cols(df_heat, list(df_heat.columns))
+    df_heat = rename_cols(df_heat, list(df_heat.columns), 'strike', ['p15'])
     
     df_heat = df_heat.loc[:, df_heat.max().sort_values(ascending=False).index]
     
