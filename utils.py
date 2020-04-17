@@ -3,91 +3,118 @@ import numpy as np
 import json
 import pdb
 
-def create_by_wc(df, col_dict):
-    
-    #fw = df.loc[:, ['fighter', 'weight_class']]
-    
-    #df = df[['fighter', 'weight_class']].drop_duplicates()
-    
-    df['weight_class_abv'] = df['weight_class'].map(lambda s: col_dict[s])
-    
-    df['fighter_wc'] = df['fighter'] + '_' + df['weight_class_abv']
-    
-    del df['weight_class_abv']
-    #del df['fighter']
-    
-    df = df.rename(columns={'fighter':'fighter_orig', 'fighter_wc':'fighter'})
-    
-    return df
-
-def get_corner_cols(df):
-    # function to get the columns corresponding to each corner
+def GetFighterByClass(DF, col_dict):
+    # Function to create 'new' fighters with their weight class appended at the
+    # end of a fighter's name. This is done to account for the fact that a
+    # fighter might have fights at different weight classes
     #
-    # df: DataFrame, contains fight data
+    # Args:
+    #   DF: DataFrame, contains fighter and weight class information
     
-    red_corner = list(filter(lambda s: 'R_' in s, df.columns))
-    blue_corner = list(filter(lambda s: 'B_' in s, df.columns))
+    DF.loc[:, ('weight_class_abv')] = DF.loc[:, ('weight_class')].map(lambda s: col_dict[s])
     
-    return red_corner, blue_corner
+    DF.loc[:, ('fighter_wc')] = DF.loc[:, ('fighter')] + '_' + DF.loc[:, ('weight_class_abv')]
+    
+    del DF['weight_class_abv']
+    
+    DF.rename(columns={'fighter':'fighter_orig', 'fighter_wc':'fighter'}, inplace=True)
 
-def create_weight_class(df):
-    # get the weight class of each fighter, taking into account that fighters
-    # sometimes fight at different weight classes
+def GetCornerCols(DF):
+    # Function to get the columns corresponding to each corner only, i.e.
+    #   filter out every column that does not represent a statistic for one of
+    #   the corners
     #
-    # df: DataFrame, contains fighter column of format fighter_wc, e.g.
-    #   "Yoel Romero_MW"
+    # Args:
+    #   DF: DataFrame, contains fight data
+    #
+    # Returns:
+    #   red_cols: list(str), list of columns that correspond to the red corner
+    #   blue_cols: list(str), list of columns that correspond to the blue corner
     
-    col_dict = read_col_map()['weight class']
+    red_cols = list(filter(lambda s: 'R_' in s, DF.columns))
+    blue_cols = list(filter(lambda s: 'B_' in s, DF.columns))
+    
+    return red_cols, blue_cols
+
+def GetClassFromFighter(DF):
+    # Function to get the weight class of each fighter, taking into account 
+    # that fighters sometimes fight at different weight classes
+    #
+    # Args:
+    #   DF: DataFrame, contains fighter column of format fighter_wc, e.g.
+    #       "Yoel Romero_MW"
+    #
+    # Returns:
+    #   DF: DataFrame, contains new column with the weight class of each fighter
+    
+    col_dict = ReadColMapping()['weight class']
     inv_col_dict = {value: key for key, value in col_dict.items()}
     
-    t = list(map(lambda s: s.split('_'), df['fighter']))
+    t = list(map(lambda s: s.split('_'), DF['fighter']))
     
-    df[['fighter_orig', 'weight_class_abv']] = pd.DataFrame(t)
+    DF[['fighter_orig', 'weight_class_abv']] = pd.DataFrame(t)
     
-    df['weight_class'] = df['weight_class_abv'].map(lambda s: inv_col_dict[s])
+    DF['weight_class'] = DF['weight_class_abv'].map(lambda s: inv_col_dict[s])
     
-    return df    
+    return DF  
 
-def name_corner(cols):
-    # function to assign red and blue corner prefix to a column name
+def AppendCornerName(cols):
+    # Function to assign red and blue corner prefix to a column name
     #
-    # cols: list(str), column names
+    # Args:
+    #   cols: list(str), column names
+    #
+    # Returns:
+    #   red_cols: list(str), list of column names that correspond to the red corner
+    #   blue_cols: list(str), list of column names that correspond to the blue corner
     
-    red_corner = list(map(lambda s: 'R_' + s, cols))
-    blue_corner = list(map(lambda s: 'B_' + s, cols))
+    red_cols = list(map(lambda s: 'R_' + s, cols))
+    blue_cols = list(map(lambda s: 'B_' + s, cols))
     
-    return red_corner, blue_corner
+    return red_cols, blue_cols
 
-def name_lnd_att(cols):
-    # function to assign landed and attempted prefix to a column name
+def AppendStrikeName(cols):
+    # Function to assign landed and attempted prefix to a column name
     #
-    # cols: list(str), column names
+    # Args:
+    #   cols: list(str), column names
+    #
+    # Returns:
+    #   landed_cols: list(str), list of column names that correspond to landed
+    #       strikes, submissions, etc.
+    #   attempted_cols: list(str), list of column names that correspond to attempted
+    #       strikes, submissions, etc.
     
-    landed = list(map(lambda s: s + '_L', cols))
-    attempted = list(map(lambda s: s + '_A', cols))
+    landed_cols = list(map(lambda s: s + '_L', cols))
+    attempted_cols = list(map(lambda s: s + '_A', cols))
     
-    return landed, attempted
+    return landed_cols, attempted_cols
 
-def read_col_map(path='./column_mapping.json'):
-    # function to read in the column mapping JSON file as a dictionary
+def ReadColMapping(path='./column_mapping.json'):
+    # Function to read in the column mapping JSON file as a dictionary
     #
-    # path: string specifying the file path to the JSON file
+    # Args:
+    #   path: string specifying the file path to the JSON file
+    #
+    # Returns:
+    #   data: JSON object that contains the column mappings
     
     with open(path) as f:
         data = json.load(f)
     
     return data
 
-def rename_cols(df, cols, col_type, sub_ignore=[]):
-    # function to rename column names to a more readable format
+def RenameColPlot(DF, cols, col_type, sub_ignore=[]):
+    # Function to rename column names to a more readable format for plotting
     #
-    # df: DataFrame with columns cols to be renamed
-    # cols: list of columns to be renamed
-    # col_type: str, which type to rename, e.g. strike or weight class columns
-    # sub_ingore: list(str), list of substrings to ignore, e.g. 'p15'
+    # Args:
+    #   DF: DataFrame with columns cols to be renamed
+    #   cols: list of columns to be renamed
+    #   col_type: str, which type to rename, e.g. strike or weight class columns
+    #   sub_ingore: list(str), list of substrings to ignore, e.g. 'p15'
     
     # read in the column mapping to get the new column names
-    col_dict = read_col_map()
+    col_dict = ReadColMapping()
 
     def map_col(col):
         col_split = col.split(sep='_')
@@ -101,6 +128,4 @@ def rename_cols(df, cols, col_type, sub_ignore=[]):
     
     rename_dict = {cols[i]: cols_rename[i] for i in range(len(cols))}
     
-    df = df.rename(columns=rename_dict)
-    
-    return df
+    DF.rename(columns=rename_dict, inplace=True)

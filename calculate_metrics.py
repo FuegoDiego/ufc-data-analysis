@@ -4,127 +4,152 @@ import pdb
 
 from utils import *
 
-def calc_avg_fight(df, cols):
-    # function to calculate the averages per 15 minutes, per fighter
+def CalcAvgFight(DF, cols):
+    # Function to calculate the averages per 15 minutes, per fighter
     #
-    # df: DataFrame, contains fight data
+    # DF: DataFrame, contains fight data
+    #
+    # Returns:
+    #   FIGHT_AVG: DataFrame, contains average metrics per 15 minutes for each
+    #       fighter across their careers
     
-    col_dict = read_col_map()['weight class']    
+    col_dict = ReadColMapping()['weight class']    
     
-    red_corner_cols, blue_corner = get_corner_cols(df)
+    red_cols, blue_cols = GetCornerCols(DF)
     
     # we want to append the total time of the fight in seconds in order to
     # calculate the average per 15 minutes
-    red_corner_cols.extend(['total_time', 'weight_class'])
-    blue_corner.extend(['total_time', 'weight_class'])
+    red_cols.extend(['total_time', 'weight_class'])
+    blue_cols.extend(['total_time', 'weight_class'])
     
-    red_corner = df[red_corner_cols]
-    blue_corner = df[blue_corner]
+    RED_CORNER = DF[red_cols]
+    BLUE_CORNER = DF[blue_cols]
     
-    red_corner = red_corner.rename(columns={'R_fighter':'fighter'})
-    blue_corner = blue_corner.rename(columns={'B_fighter':'fighter'})
+    RED_CORNER.rename(columns={'R_fighter':'fighter'}, inplace=True)
+    BLUE_CORNER.rename(columns={'B_fighter':'fighter'}, inplace=True)
     
     # we have to create new fighters for those who fight at multiple weight
     # classes, e.g. Jorge Masvidal fights and Lightweight and Welterweight
     # this way, the averages only count towards the weight class that the
     # fight happened at
-    red_corner = create_by_wc(red_corner, col_dict)
-    blue_corner = create_by_wc(blue_corner, col_dict)
+    GetFighterByClass(RED_CORNER, col_dict)
+    GetFighterByClass(BLUE_CORNER, col_dict)
 
-    red_corner_sum = red_corner.groupby('fighter').sum()
-    blue_corner_sum = blue_corner.groupby('fighter').sum()
+    RED_CORNER_SUM = RED_CORNER.groupby('fighter').sum()
+    BLUE_CORNER_SUM = BLUE_CORNER.groupby('fighter').sum()
     
-    fights_sum = red_corner_sum.merge(blue_corner_sum, on='fighter', how='outer')
-    fights_sum = fights_sum.fillna(0)
+    # we want to get the totals by combining the numbers from when a fighter
+    # was in the red corner and when they were in the blue corner
+    FIGHT_SUM = RED_CORNER_SUM.merge(BLUE_CORNER_SUM, on='fighter', how='outer')
+    FIGHT_SUM = FIGHT_SUM.fillna(0)  # a fighter only fought in one corner ever
 
-    fight_time = fights_sum['total_time_x'] + fights_sum['total_time_y']
-    fight_time = fight_time.reset_index(name='total_time')
-    fight_time = fight_time.set_index('fighter')
+    # this is the total number of seconds a fighter spent fighting in their
+    # careers
+    FIGHT_TIME = FIGHT_SUM['total_time_x'] + FIGHT_SUM['total_time_y']
+    FIGHT_TIME = FIGHT_TIME.reset_index(name='total_time')
+    FIGHT_TIME = FIGHT_TIME.set_index('fighter')
 
-    fights_sum = calc_fight_sums(fights_sum, cols)
+    FIGHT_SUM = CalcFightSums(FIGHT_SUM, cols)
     
-    cols_avg = list(map(lambda s: s + '_p15', fights_sum.columns))
-    cols_sum = fights_sum.loc[:, fights_sum.columns != 'total_time'].columns.values
-    
+    cols_avg = list(map(lambda s: s + '_p15', FIGHT_SUM.columns))
+    cols_sum = FIGHT_SUM.loc[:, FIGHT_SUM.columns != 'total_time'].columns.values
     cols_rename = {cols_sum[i]: cols_avg[i] for i in range(len(cols_sum))}
 
-    fights_sum = fights_sum.join(fight_time, on='fighter')
+    FIGHT_SUM = FIGHT_SUM.join(FIGHT_TIME, on='fighter')
     
-    fights_avg = fights_sum.div(fights_sum['total_time'] / 60 / 15, axis=0)
+    # get the average per 15 minutes
+    FIGHT_AVG = FIGHT_SUM.div(FIGHT_SUM['total_time'] / 60 / 15, axis=0)
     
-    del fights_avg['total_time']
+    del FIGHT_AVG['total_time']
     
-    fights_avg = fights_avg.rename(columns=cols_rename)
+    FIGHT_AVG = FIGHT_AVG.rename(columns=cols_rename)
     
-    return fights_avg
+    return FIGHT_AVG
 
-def calc_avg_per_class(fights_avg, weight_class, cols):
-    # function to calculate the average statistic per weight class, e.g.
+def CalcAvgPerClass(FIGHT_AVG, WEIGHT_CLASS, cols):
+    # Function to calculate the average statistic per weight class, e.g.
     # average significant strikes landed and attempted per weight class
     #
-    # stat_col: column type to calculate average over, e.g. 'SIG_STR.'
+    # Args:
+    #   FIGHT_AVG: DataFrame, contains average fight metrics per fighter
+    #   WEIGHT_CLASS: DataFrame, contains the weight class of each fighter
+    #
+    # Returns:
+    #   WEIGHT_CLASS_AVG: DataFrame, contrains the average metrics per weight
+    #       class
 
-    fights_avg = fights_avg.merge(weight_class[['fighter', 'weight_class']], on='fighter')
+    FIGHT_AVG = FIGHT_AVG.merge(WEIGHT_CLASS[['fighter', 'weight_class']], on='fighter')
 
-    weight_class_avg = fights_avg.groupby('weight_class').mean().round(2)
+    WEIGHT_CLASS_AVG = FIGHT_AVG.groupby('weight_class').mean().round(2)
     
-    return weight_class_avg
+    return WEIGHT_CLASS_AVG
 
-# TODO: move to utils as a function that calculates the sum of red and blue
-# corner statistics
-def calc_fight_sums(df, cols):
-    # function to get the total number of strikes, submissions, takedowns, etc.
+def CalcFightSums(DF, cols):
+    # Function to get the total number of strikes, submissions, takedowns, etc.
     # in a fight
     #
-    # df: DataFrame, contains fight data
+    # DF: DataFrame, contains fight data
     # cols: list(str), list of column names to calculate totals for
+    #
+    # Return:
+    #   DF_STAT: DataFrame, contains the total number of strikes, etc. in each
+    #       fight
     
     # columns for landed and attempted
-    red, blue = name_corner(cols)
-    total_l, total_a = name_lnd_att(cols)
-    red_l, red_a = name_lnd_att(red)
-    blue_l, blue_a = name_lnd_att(blue)
+    red, blue = AppendCornerName(cols)
+    total_l, total_a = AppendStrikeName(cols)
+    red_l, red_a = AppendStrikeName(red)
+    blue_l, blue_a = AppendStrikeName(blue)
     
     # columns to retrieve, and do calculations on
     cols_red = red_l + red_a
     cols_blue = blue_l + blue_a
     cols_total = total_l + total_a
     
-    df_stat = pd.DataFrame(df[cols_red].values + df[cols_blue].values, index=df.index,
+    DF_STAT = pd.DataFrame(DF[cols_red].values + DF[cols_blue].values, index=DF.index,
                       columns=cols_total)
     
-    return df_stat
+    return DF_STAT
 
-def get_n_fights(df):
-    # function to get a DataFrame containing the number of fights per fighter
+def CalcNumFights(DF):
+    # Function to get the number of fights per fighter
     #
-    # df: DataFrame, contains fight data
-    
-    fighter_counts = df[['R_fighter', 'B_fighter']]
-
-    red_counts = fighter_counts.groupby('R_fighter').size().reset_index(name='R_counts')
-    blue_counts = fighter_counts.groupby('B_fighter').size().reset_index(name='B_counts')
-    
-    red_counts = red_counts.set_index('R_fighter')
-    red_counts.index.names = ['fighter']
-    
-    blue_counts = blue_counts.set_index('B_fighter')
-    blue_counts.index.names = ['fighter']
-
-    fighter_counts = red_counts.merge(blue_counts, on='fighter')
-
-    fighter_counts['num_fights'] = fighter_counts['R_counts'] + fighter_counts['B_counts']
-    
-    return fighter_counts
-
-def get_fight_time(df):
-    # function to get the total fight time in seconds for each fight
+    # Args:
+    #   DF: DataFrame, contains fight data
     #
-    # df: DataFrame, contains fight data
+    # Returns:
+    #   FIGHT_COUNTS: DataFrame, contains number of fights per fighter
+    
+    FIGHT_COUNTS = DF[['R_fighter', 'B_fighter']]
+
+    RED_COUNTS = FIGHT_COUNTS.groupby('R_fighter').size().reset_index(name='R_counts')
+    BLUE_COUNTS = FIGHT_COUNTS.groupby('B_fighter').size().reset_index(name='B_counts')
+    
+    RED_COUNTS = RED_COUNTS.set_index('R_fighter')
+    RED_COUNTS.index.names = ['fighter']
+    
+    BLUE_COUNTS = BLUE_COUNTS.set_index('B_fighter')
+    BLUE_COUNTS.index.names = ['fighter']
+
+    FIGHT_COUNTS = RED_COUNTS.merge(BLUE_COUNTS, on='fighter')
+
+    FIGHT_COUNTS['num_fights'] = FIGHT_COUNTS['R_counts'] + FIGHT_COUNTS['B_counts']
+    
+    return FIGHT_COUNTS
+
+def CalcFightTime(DF):
+    # Function to get the total fight time in seconds for each fight
+    #
+    # Args:
+    #   DF: DataFrame, contains fight data
+    #
+    # Returns:
+    #   DF: DataFrame, contains new column with the total time in seconds for
+    #       every fight
     
     # convert from format 'xx:yy' to total number of seconds, e.g. 1:26 to 86
-    df['last_round_secs'] = df['last_round_time'].map(lambda s: list(map(int, s.split(':')))).map(lambda x: x[0]*60 + x[1])
+    DF['last_round_secs'] = DF['last_round_time'].map(lambda s: list(map(int, s.split(':')))).map(lambda x: x[0]*60 + x[1])
     
-    df['total_time'] = 5*60*(df['last_round']-1) + df['last_round_secs']
+    DF['total_time'] = 5*60*(DF['last_round']-1) + DF['last_round_secs']
     
-    return df
+    return DF
