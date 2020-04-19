@@ -66,6 +66,7 @@ def CalcAvgFight(DF, cols):
     
     return FIGHT_AVG
 
+
 def CalcAvgPerClass(FIGHT_AVG, WEIGHT_CLASS, cols):
     # Function to calculate the average statistic per weight class, e.g.
     # average significant strikes landed and attempted per weight class
@@ -83,6 +84,7 @@ def CalcAvgPerClass(FIGHT_AVG, WEIGHT_CLASS, cols):
     WEIGHT_CLASS_AVG = FIGHT_AVG.groupby('weight_class').mean().round(2)
     
     return WEIGHT_CLASS_AVG
+
 
 def CalcFightSums(DF, cols):
     # Function to get the total number of strikes, submissions, takedowns, etc.
@@ -111,6 +113,25 @@ def CalcFightSums(DF, cols):
     
     return DF_STAT
 
+
+def CalcFightTime(DF):
+    # Function to get the total fight time in seconds for each fight
+    #
+    # Args:
+    #   DF: DataFrame, contains fight data
+    #
+    # Returns:
+    #   DF: DataFrame, contains new column with the total time in seconds for
+    #       every fight
+    
+    # convert from format 'xx:yy' to total number of seconds, e.g. 1:26 to 86
+    DF['last_round_secs'] = DF['last_round_time'].map(lambda s: list(map(int, s.split(':')))).map(lambda x: x[0]*60 + x[1])
+    
+    DF['total_time'] = 5*60*(DF['last_round']-1) + DF['last_round_secs']
+    
+    return DF
+
+
 def CalcNumFights(DF):
     # Function to get the number of fights per fighter
     #
@@ -137,19 +158,26 @@ def CalcNumFights(DF):
     
     return FIGHT_COUNTS
 
-def CalcFightTime(DF):
-    # Function to get the total fight time in seconds for each fight
+
+def CalcNumFinish(DF, group_by, finish_type):
+    # Function to calculate the number of finishes by finish type grouped by
+    # the column(s) given by the argument 'group_by'
     #
     # Args:
-    #   DF: DataFrame, contains fight data
+    #   DF: DataFrame, contains fight statistics and information
+    #   group_by: lst(str), list of column names to group the calculation by
+    #   finish_type: str, type of finish
+    #
+    # Example:
+    #   CalcNumFinish(FIGHTS, ['weight_class'], 'KO/TKO')
     #
     # Returns:
-    #   DF: DataFrame, contains new column with the total time in seconds for
-    #       every fight
+    #   FINISHES: DataFrame, contains the number of finishes for each group
+    #       given by 'group_by'
     
-    # convert from format 'xx:yy' to total number of seconds, e.g. 1:26 to 86
-    DF['last_round_secs'] = DF['last_round_time'].map(lambda s: list(map(int, s.split(':')))).map(lambda x: x[0]*60 + x[1])
+    FINISHES = DF[DF['win_by'].str.contains(finish_type)].reset_index()
+
+    FINISHES = FINISHES.groupby(group_by).size().reset_index(name='count')
     
-    DF['total_time'] = 5*60*(DF['last_round']-1) + DF['last_round_secs']
-    
-    return DF
+    return FINISHES
+

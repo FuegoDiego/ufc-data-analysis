@@ -46,3 +46,11 @@ WEIGHT_CLASS_AVG = WEIGHT_CLASS_AVG.reindex(weight_class_sort)
 
 # get the total number of fights, per fighter
 FIGHT_COUNT = CalcNumFights(FIGHTS)
+
+# number of finishes by finish type per weight class
+FINISHES_KO = CalcNumFinish(FIGHTS, 'weight_class', 'KO')
+FINISHES_KO = FINISHES_KO.set_index('weight_class').sort_values(by='count', ascending=False)
+FINISHES_SUB = CalcNumFinish(FIGHTS, 'weight_class', 'Submission')
+FINISHES_SUB = FINISHES_SUB.set_index('weight_class').sort_values(by='count', ascending=False)
+FINISHES_DEC = CalcNumFinish(FIGHTS, 'weight_class', 'Decision')
+FINISHES_DEC = FINISHES_DEC.set_index('weight_class').sort_values(by='count', ascending=False)
